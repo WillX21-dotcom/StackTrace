@@ -3,7 +3,9 @@
 .env.local
 secrets/
 *.key
+*.json
 config/credentials.json
+stacktrace_prod_engine.json
 
 # Dependencies
 node_modules/

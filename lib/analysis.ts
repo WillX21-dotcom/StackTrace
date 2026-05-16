@@ -28,66 +28,138 @@ import {
 } from "./schemas";
 
 /**
- * Bob API Configuration
+ * API Configuration
  */
 const BOB_API_KEY = process.env.BOB_API_KEY;
 const BOB_API_URL = process.env.BOB_API_URL || "https://api.bob.build/v1/chat/completions";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 /**
- * Analysis engine using Bob API
- * Sends prompts to Bob's LLM and returns structured JSON responses
+ * Gemini Fallback Engine
+ * Uses Google's Gemini 1.5 Flash model as emergency fallback
  */
-async function callAnalysisEngine(prompt: string): Promise<string> {
-  if (!BOB_API_KEY) {
+async function callGeminiEngine(prompt: string): Promise<string> {
+  if (!GEMINI_API_KEY) {
     throw new Error(
-      "BOB_API_KEY is not configured. Add your Bob API key to .env.local"
+      "GEMINI_API_KEY is not configured. Add your Gemini API key to .env.local"
     );
   }
 
-  try {
-    const response = await fetch(BOB_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${BOB_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4-turbo-preview",
-        messages: [
-          {
-            role: "system",
-            content: "You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.2,
-        response_format: { type: "json_object" }
-      }),
-    });
+  console.log("🔄 Fallback: Using Gemini 1.5 Flash engine");
 
-    if (!response.ok) {
-      const errorText = await response.text();
+  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: `You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences.\n\n${prompt}`
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+        responseMimeType: "application/json"
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Gemini API request failed (${response.status}): ${errorText}`
+    );
+  }
+
+  const data = await response.json();
+  
+  if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+    throw new Error("Invalid response format from Gemini API");
+  }
+
+  return data.candidates[0].content.parts[0].text;
+}
+
+/**
+ * Primary Analysis Engine using Bob API with Gemini Fallback
+ * Sends prompts to Bob's LLM and returns structured JSON responses
+ * Automatically falls back to Gemini if Bob fails
+ */
+async function callAnalysisEngine(prompt: string): Promise<string> {
+  // Try Bob API first
+  if (BOB_API_KEY) {
+    try {
+      const response = await fetch(BOB_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${BOB_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4-turbo-preview",
+          messages: [
+            {
+              role: "system",
+              content: "You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.2,
+          response_format: { type: "json_object" }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Bob API request failed (${response.status}): ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error("Invalid response format from Bob API");
+      }
+
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error("⚠️ Bob API failed, falling back to Gemini:", error instanceof Error ? error.message : "Unknown error");
+      
+      // Fallback to Gemini
+      if (GEMINI_API_KEY) {
+        return await callGeminiEngine(prompt);
+      }
+      
+      // No fallback available
       throw new Error(
-        `Bob API request failed (${response.status}): ${errorText}`
+        `Bob API failed and no fallback available. Error: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
-
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error("Invalid response format from Bob API");
-    }
-
-    return data.choices[0].message.content;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Bob API error: ${error.message}`);
-    }
-    throw new Error("Unknown error calling Bob API");
   }
+
+  // No Bob API key, try Gemini directly
+  if (GEMINI_API_KEY) {
+    console.log("ℹ️ BOB_API_KEY not configured, using Gemini engine");
+    return await callGeminiEngine(prompt);
+  }
+
+  // No API keys configured
+  throw new Error(
+    "No API keys configured. Add BOB_API_KEY or GEMINI_API_KEY to .env.local"
+  );
 }
 
 /**

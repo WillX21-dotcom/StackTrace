@@ -33,7 +33,7 @@ StackTrace uses an evidence-based analysis pipeline that ensures **100% unique, 
 - **Validation:** Zod
 - **PDF Export:** jspdf
 - **Markdown Parsing:** marked
-- **API:** GitHub REST API
+- **APIs:** GitHub REST API, Bob API (primary), Gemini 1.5 Flash (fallback)
 
 ## Getting Started
 
@@ -62,18 +62,30 @@ cp .env.example .env.local
 
 Edit `.env.local` and add your API keys:
 ```
-# Required: Bob API Key for analysis
+# Primary: Bob API Key for analysis
 BOB_API_KEY=bob_prod_bob-apikey_...
+
+# Fallback: Gemini API Key (automatic failover)
+GEMINI_API_KEY=AIza...
 
 # Optional: GitHub token for higher rate limits
 GITHUB_TOKEN=your_github_personal_access_token
 ```
 
-**Getting a Bob API Key:**
+**Getting API Keys:**
+
+**Bob API Key (Primary):**
 - Visit the IBM Bob dashboard
 - Create a new API key for production use
 - Copy the key (format: `bob_prod_bob-apikey_...`)
 - Add it to your `.env.local` file
+
+**Gemini API Key (Fallback):**
+- Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+- Create a new API key
+- Copy the key (format: `AIza...`)
+- Add it to your `.env.local` file
+- The system automatically uses Gemini if Bob API fails (rate limits, timeouts, errors)
 
 4. Run the development server:
 ```bash
