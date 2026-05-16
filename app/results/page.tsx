@@ -15,6 +15,7 @@ import TabSwitcher from "@/components/ui/TabSwitcher";
 import ProgressStream from "@/components/ui/ProgressStream";
 import SkeletonCards from "@/components/ui/SkeletonCards";
 import ErrorCard from "@/components/ui/ErrorCard";
+import ExportButtons from "@/components/ui/ExportButtons";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -210,18 +211,29 @@ export default function ResultsPage() {
 
             {/* Playbook View */}
             {activeTab === "playbook" && (
-              <div className="p-8 bg-surface border border-border rounded-card shadow-card text-center">
-                <h2 className="text-2xl font-bold mb-4">Team Playbook</h2>
-                <p className="text-text-secondary mb-6">
-                  Markdown and PDF export functionality coming soon
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <button className="px-6 py-3 bg-accent hover:bg-accent-hover text-background font-semibold rounded-button transition-colors">
-                    Download PDF
-                  </button>
-                  <button className="px-6 py-3 bg-surface border border-border hover:border-accent text-text-primary rounded-button transition-colors">
-                    Download Markdown
-                  </button>
+              <div className="p-8 bg-surface border border-border rounded-card shadow-card">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold mb-4">Team Playbook</h2>
+                  <p className="text-text-secondary mb-6">
+                    Download a comprehensive onboarding playbook with all analysis insights
+                  </p>
+                </div>
+                
+                <ExportButtons
+                  repoName={`${owner}-${repo}`}
+                  analysisData={analysisResult}
+                />
+                
+                <div className="mt-8 pt-8 border-t border-border">
+                  <h3 className="text-lg font-semibold mb-4">Playbook Contents</h3>
+                  <ul className="text-text-secondary space-y-2">
+                    <li>✅ Architecture Overview</li>
+                    <li>✅ Critical Gotchas ({analysisResult.gotchas.length} detected)</li>
+                    <li>✅ Contributor Guide</li>
+                    <li>✅ Deployment Runbook</li>
+                    <li>✅ Coding Standards</li>
+                    <li>✅ Playbook Summary</li>
+                  </ul>
                 </div>
               </div>
             )}
