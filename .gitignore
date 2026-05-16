@@ -1,0 +1,6 @@
+.env 
+.env.local 
+secrets/ 
+*.key 
+config/credentials.json 
+node_modules/
