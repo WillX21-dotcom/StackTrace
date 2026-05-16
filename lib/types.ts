@@ -58,12 +58,20 @@ export type CodingStandardsInsight = {
   confidence: number;
 };
 
+export type PlaybookSummary = {
+  overallConfidence: number;
+  readyForOnboarding: boolean;
+  missingInfo: string[];
+  strengths: string[];
+};
+
 export type AnalysisResult = {
   architecture: ArchitectureInsight;
   gotchas: GotchaInsight[];
   contributorGuide: ContributorGuideInsight;
   deploymentRunbook: DeploymentRunbookInsight;
   codingStandards: CodingStandardsInsight;
+  playbook: PlaybookSummary;
 };
 
 export type Playbook = {
