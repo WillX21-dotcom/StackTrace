@@ -4,3 +4,5 @@ secrets/
 *.key 
 config/credentials.json 
 node_modules/
+bob_sessions/** 
+.next/**
