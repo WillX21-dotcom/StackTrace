@@ -1,1 +1,0 @@
-# StackTrace - IBM Bob Hackathon 
