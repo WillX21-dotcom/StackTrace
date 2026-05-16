@@ -60,33 +60,22 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and add your GitHub token:
+Edit `.env.local` and add your API keys:
 ```
+# Required: Bob API Key for analysis
+BOB_API_KEY=bob_prod_bob-apikey_...
+
+# Optional: GitHub token for higher rate limits
 GITHUB_TOKEN=your_github_personal_access_token
 ```
 
-4. **Configure LLM Integration** (Required for analysis):
+**Getting a Bob API Key:**
+- Visit the IBM Bob dashboard
+- Create a new API key for production use
+- Copy the key (format: `bob_prod_bob-apikey_...`)
+- Add it to your `.env.local` file
 
-The analysis engine requires an LLM API (OpenAI, Anthropic Claude, etc.). 
-
-Edit `lib/analysis.ts` and replace the `callAnalysisEngine` function with your LLM integration:
-
-```typescript
-async function callAnalysisEngine(prompt: string): Promise<string> {
-  // Example: OpenAI Integration
-  const response = await openai.chat.completions.create({
-    model: "gpt-4-turbo-preview",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.2,
-    response_format: { type: "json_object" }
-  });
-  return response.choices[0].message.content;
-}
-```
-
-**Important:** Set temperature to 0.2-0.3 for consistent, factual output.
-
-5. Run the development server:
+4. Run the development server:
 ```bash
 npm run dev
 ```

@@ -28,32 +28,66 @@ import {
 } from "./schemas";
 
 /**
- * Analysis engine interface
- * This is a placeholder - in production, this would call an LLM API
- *
- * PRODUCTION INTEGRATION NOTES:
- * - Replace with OpenAI, Anthropic Claude, or other LLM API
- * - Ensure prompts enforce evidence-based analysis
- * - Validate that responses include required fields (issueId, sourceEvidence, etc.)
- * - Set temperature low (0.2-0.3) for consistent, factual output
- * - Use structured output mode if available (e.g., OpenAI JSON mode)
+ * Bob API Configuration
+ */
+const BOB_API_KEY = process.env.BOB_API_KEY;
+const BOB_API_URL = process.env.BOB_API_URL || "https://api.bob.build/v1/chat/completions";
+
+/**
+ * Analysis engine using Bob API
+ * Sends prompts to Bob's LLM and returns structured JSON responses
  */
 async function callAnalysisEngine(prompt: string): Promise<string> {
-  // TODO: Replace with actual LLM API call
-  console.log("StackTrace Analysis Engine - Prompt length:", prompt.length);
-  
-  // Example integration (uncomment and configure):
-  // const response = await openai.chat.completions.create({
-  //   model: "gpt-4-turbo-preview",
-  //   messages: [{ role: "user", content: prompt }],
-  //   temperature: 0.2,
-  //   response_format: { type: "json_object" }
-  // });
-  // return response.choices[0].message.content;
-  
-  throw new Error(
-    "StackTrace Analysis Engine not configured. Set up LLM API integration in lib/analysis.ts"
-  );
+  if (!BOB_API_KEY) {
+    throw new Error(
+      "BOB_API_KEY is not configured. Add your Bob API key to .env.local"
+    );
+  }
+
+  try {
+    const response = await fetch(BOB_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${BOB_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4-turbo-preview",
+        messages: [
+          {
+            role: "system",
+            content: "You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.2,
+        response_format: { type: "json_object" }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Bob API request failed (${response.status}): ${errorText}`
+      );
+    }
+
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error("Invalid response format from Bob API");
+    }
+
+    return data.choices[0].message.content;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Bob API error: ${error.message}`);
+    }
+    throw new Error("Unknown error calling Bob API");
+  }
 }
 
 /**
