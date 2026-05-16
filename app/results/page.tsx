@@ -16,6 +16,7 @@ import ProgressStream from "@/components/ui/ProgressStream";
 import SkeletonCards from "@/components/ui/SkeletonCards";
 import ErrorCard from "@/components/ui/ErrorCard";
 import ExportButtons from "@/components/ui/ExportButtons";
+import ArchitectureMap from "@/components/ui/ArchitectureMap";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
@@ -240,12 +241,10 @@ export default function ResultsPage() {
 
             {/* Architecture Map View */}
             {activeTab === "architecture" && (
-              <div className="p-8 bg-surface border border-border rounded-card shadow-card text-center">
-                <h2 className="text-2xl font-bold mb-4">Architecture Map</h2>
-                <p className="text-text-secondary">
-                  Visual architecture diagram coming soon
-                </p>
-              </div>
+              <ArchitectureMap
+                data={analysisResult.architecture}
+                repoName={`${owner}/${repo}`}
+              />
             )}
           </>
         ) : null}
