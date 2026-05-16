@@ -214,6 +214,15 @@ export async function fetchRepoContent(repoUrl: string): Promise<RepoContent> {
       })
     );
     
+    // Validate tree response
+    if (!treeResponse.data || !treeResponse.data.tree || !Array.isArray(treeResponse.data.tree)) {
+      throw new GitHubError(
+        `Invalid response from GitHub API for ${owner}/${repo}`,
+        "INVALID_RESPONSE",
+        "The repository may be empty or the API response format has changed"
+      );
+    }
+    
     const fileTree = treeResponse.data.tree
       .filter((item) => item.path && item.path.split("/").length <= 3) // Max depth 3
       .map((item) => ({
