@@ -9,11 +9,12 @@ const config: Config = {
     extend: {
       colors: {
         // Dark developer-focused theme
-        background: "#0a0a0a",      // Near-black background
-        surface: "#1a1a1a",         // Card/panel background
-        border: "#2a2a2a",          // Subtle borders
+        background: "#0a0b0d",      // Near-black background
+        surface: "#111318",         // Card/panel background
+        border: "#1e2330",          // Subtle borders
         accent: "#1aad7e",          // Teal accent (primary CTA)
         "accent-hover": "#15926a",  // Darker teal for hover
+        secondary: "#7b72f0",       // Purple secondary accent
         text: {
           primary: "#e5e5e5",       // High-contrast text
           secondary: "#a3a3a3",     // Muted text
@@ -21,8 +22,8 @@ const config: Config = {
         },
         severity: {
           high: "#ef4444",          // Red for high-severity gotchas
-          medium: "#f59e0b",        // Yellow for medium-severity
-          low: "#3b82f6",           // Blue for low-severity
+          medium: "#f59e0b",        // Amber for medium-severity
+          low: "#6b7280",           // Gray for low-severity
         },
         confidence: {
           high: "#10b981",          // Green for ≥0.8

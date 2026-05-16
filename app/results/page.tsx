@@ -2,46 +2,170 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { AnalysisResult } from "@/lib/types";
+
+// Component imports
+import ArchitectureCard from "@/components/cards/ArchitectureCard";
+import GotchasCard from "@/components/cards/GotchasCard";
+import ContributorGuideCard from "@/components/cards/ContributorGuideCard";
+import DeploymentCard from "@/components/cards/DeploymentCard";
+import CodingStandardsCard from "@/components/cards/CodingStandardsCard";
+import RepoStats from "@/components/ui/RepoStats";
+import TabSwitcher from "@/components/ui/TabSwitcher";
+import ProgressStream from "@/components/ui/ProgressStream";
+import SkeletonCards from "@/components/ui/SkeletonCards";
+import ErrorCard from "@/components/ui/ErrorCard";
 
 export default function ResultsPage() {
   const searchParams = useSearchParams();
   const owner = searchParams.get("owner");
   const repo = searchParams.get("repo");
+  
   const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [activeTab, setActiveTab] = useState<"cards" | "playbook" | "architecture">("cards");
 
   useEffect(() => {
     if (owner && repo) {
-      // Simulate analysis loading
+      // Simulate progressive analysis with messages
+      const messages = [
+        "Fetching repository contents...",
+        "Analyzing architecture patterns...",
+        "Detecting potential gotchas...",
+        "Extracting contributor guidelines...",
+        "Mapping deployment pipeline...",
+        "Identifying coding standards...",
+        "Generating playbook summary...",
+      ];
+
+      let messageIndex = 0;
+      const messageInterval = setInterval(() => {
+        if (messageIndex < messages.length) {
+          setProgressMessages((prev) => [...prev, messages[messageIndex]]);
+          messageIndex++;
+        } else {
+          clearInterval(messageInterval);
+        }
+      }, 500);
+
+      // Simulate analysis completion with mock data
       setTimeout(() => {
+        setAnalysisResult({
+          architecture: {
+            framework: "Next.js 14 (App Router)",
+            patterns: ["Server Components", "API Routes", "Client-side State"],
+            dependencies: [
+              "next@14.0.0",
+              "react@18.2.0",
+              "typescript@5.0.0",
+              "tailwindcss@3.3.0",
+              "zod@3.22.0",
+            ],
+            confidence: 0.92,
+          },
+          gotchas: [
+            {
+              title: "Missing Error Boundaries",
+              description: "No error boundaries detected in the component tree. Unhandled errors will crash the entire app.",
+              severity: "high",
+              filePath: "app/layout.tsx",
+              confidence: 0.85,
+            },
+            {
+              title: "Unvalidated API Responses",
+              description: "External API responses are not validated with Zod schemas before use.",
+              severity: "medium",
+              filePath: "lib/github.ts",
+              confidence: 0.78,
+            },
+            {
+              title: "Hardcoded API Endpoints",
+              description: "API endpoints are hardcoded instead of using environment variables.",
+              severity: "low",
+              filePath: "lib/api.ts",
+              confidence: 0.65,
+            },
+          ],
+          contributorGuide: {
+            setupSteps: [
+              "Clone the repository and install dependencies with npm install",
+              "Copy .env.example to .env.local and add your GitHub token",
+              "Run npm run dev to start the development server on port 3000",
+              "Open http://localhost:3000 in your browser",
+            ],
+            testingStrategy: "No automated tests detected. Consider adding Jest and React Testing Library for component tests.",
+            prProcess: "Create feature branches from develop, commit with conventional commits (feat/fix/chore), and open PRs for review before merging.",
+            confidence: 0.71,
+          },
+          deploymentRunbook: {
+            buildCommand: "npm run build",
+            envVars: ["GITHUB_TOKEN", "NEXT_PUBLIC_API_URL"],
+            deploymentSteps: ["Install", "Build", "Test", "Deploy"],
+            confidence: 0.88,
+          },
+          codingStandards: {
+            linter: "eslint",
+            formatter: "prettier",
+            conventions: [
+              "TypeScript strict mode enabled",
+              "Functional components with hooks",
+              "Tailwind CSS for styling",
+              "Conventional commit messages",
+            ],
+            confidence: 0.82,
+          },
+          playbook: {
+            overallConfidence: 0.81,
+            readyForOnboarding: true,
+            missingInfo: ["Test coverage", "CI/CD pipeline"],
+            strengths: ["Clear architecture", "Type safety", "Modern stack"],
+          },
+        });
         setIsAnalyzing(false);
-      }, 3000);
+      }, 4000);
+
+      return () => clearInterval(messageInterval);
     }
   }, [owner, repo]);
 
   if (!owner || !repo) {
     return (
       <main className="min-h-screen flex items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-severity-high">Invalid Repository</h1>
-          <p className="text-text-secondary">Please provide a valid GitHub repository URL.</p>
-          <a
-            href="/"
-            className="inline-block px-6 py-3 bg-accent hover:bg-accent-hover text-background font-semibold rounded-button transition-colors"
-          >
-            Go Back
-          </a>
-        </div>
+        <ErrorCard
+          title="Invalid Repository"
+          message="Please provide a valid GitHub repository URL."
+          suggestion="Make sure the URL follows the format: github.com/owner/repo"
+        />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-8">
+        <ErrorCard
+          title="Analysis Failed"
+          message={error}
+          suggestion="Check that the repository is public and accessible."
+          onRetry={() => {
+            setError(null);
+            setIsAnalyzing(true);
+            setProgressMessages([]);
+          }}
+        />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <main className="min-h-screen p-8 bg-background">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-4xl font-bold font-sans">
               {owner}/<span className="text-accent">{repo}</span>
             </h1>
             <p className="text-text-secondary mt-2">Repository Analysis</p>
@@ -57,38 +181,62 @@ export default function ResultsPage() {
         {/* Analysis Loading State */}
         {isAnalyzing ? (
           <div className="space-y-6">
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-text-secondary">Analyzing repository...</p>
-                <p className="text-text-tertiary text-sm">
-                  Detecting architecture, gotchas, and best practices
+            <ProgressStream messages={progressMessages} />
+            <SkeletonCards />
+          </div>
+        ) : analysisResult ? (
+          <>
+            {/* Stats Bar */}
+            <RepoStats
+              filesAnalyzed={42}
+              modulesFound={18}
+              bobSessions={1}
+              playbookSections={5}
+            />
+
+            {/* Tab Switcher */}
+            <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+
+            {/* Cards View */}
+            {activeTab === "cards" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ArchitectureCard data={analysisResult.architecture} />
+                <GotchasCard data={analysisResult.gotchas} />
+                <ContributorGuideCard data={analysisResult.contributorGuide} />
+                <DeploymentCard data={analysisResult.deploymentRunbook} />
+                <CodingStandardsCard data={analysisResult.codingStandards} />
+              </div>
+            )}
+
+            {/* Playbook View */}
+            {activeTab === "playbook" && (
+              <div className="p-8 bg-surface border border-border rounded-card shadow-card text-center">
+                <h2 className="text-2xl font-bold mb-4">Team Playbook</h2>
+                <p className="text-text-secondary mb-6">
+                  Markdown and PDF export functionality coming soon
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <button className="px-6 py-3 bg-accent hover:bg-accent-hover text-background font-semibold rounded-button transition-colors">
+                    Download PDF
+                  </button>
+                  <button className="px-6 py-3 bg-surface border border-border hover:border-accent text-text-primary rounded-button transition-colors">
+                    Download Markdown
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Architecture Map View */}
+            {activeTab === "architecture" && (
+              <div className="p-8 bg-surface border border-border rounded-card shadow-card text-center">
+                <h2 className="text-2xl font-bold mb-4">Architecture Map</h2>
+                <p className="text-text-secondary">
+                  Visual architecture diagram coming soon
                 </p>
               </div>
-            </div>
-
-            {/* Skeleton Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="p-6 bg-surface border border-border rounded-card animate-pulse-slow"
-                >
-                  <div className="h-6 bg-border rounded w-3/4 mb-4"></div>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-border rounded w-full"></div>
-                    <div className="h-4 bg-border rounded w-5/6"></div>
-                    <div className="h-4 bg-border rounded w-4/6"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-text-secondary">Analysis complete! (Cards will be implemented next)</p>
-          </div>
-        )}
+            )}
+          </>
+        ) : null}
       </div>
     </main>
   );

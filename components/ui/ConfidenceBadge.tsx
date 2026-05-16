@@ -1,20 +1,23 @@
-// Confidence score badge component
-// TODO: Implement badge with color coding
+// Confidence indicator badge with tooltip for low confidence fields
 
 interface ConfidenceBadgeProps {
-  score: number; // 0.0-1.0
+  confidence: number;
+  showWarning?: boolean;
 }
 
-export default function ConfidenceBadge({ score }: ConfidenceBadgeProps) {
-  const getColor = () => {
-    if (score >= 0.8) return "bg-confidence-high";
-    if (score >= 0.6) return "bg-confidence-medium";
-    return "bg-confidence-low";
-  };
+export default function ConfidenceBadge({ confidence, showWarning = true }: ConfidenceBadgeProps) {
+  const isLowConfidence = confidence < 0.6;
+  
+  if (!showWarning || !isLowConfidence) {
+    return null;
+  }
 
   return (
-    <span className={`px-2 py-1 rounded text-xs font-semibold ${getColor()}`}>
-      {Math.round(score * 100)}% {score < 0.6 && "⚠️"}
+    <span 
+      className="inline-flex items-center gap-1 px-2 py-0.5 bg-severity-medium/10 border border-severity-medium/30 rounded text-severity-medium text-xs font-medium"
+      title="Low confidence — verify manually"
+    >
+      ⚠️ Verify
     </span>
   );
 }
