@@ -26,14 +26,19 @@ export type ArchitectureInsight = {
   framework: string;
   patterns: string[];
   dependencies: string[];
+  communicationPattern: string; // e.g., "Pub/Sub via /events", "REST API", "GraphQL"
   confidence: number;
 };
 
 export type GotchaInsight = {
+  issueId: string; // Unique ID: e.g., "AUTH-BYPASS-MIDDLEWARE-TS"
   title: string;
   description: string;
   severity: "high" | "medium" | "low";
   filePath: string;
+  lineNumber?: number; // Specific line where issue exists
+  sourceEvidence: string; // Code snippet or specific evidence from the repo
+  customFix: string; // Tailored fix for this repo's coding style
   confidence: number;
 };
 
@@ -55,6 +60,7 @@ export type CodingStandardsInsight = {
   linter: string | null;
   formatter: string | null;
   conventions: string[];
+  sourceEvidence: string; // Evidence of conventions from actual code
   confidence: number;
 };
 

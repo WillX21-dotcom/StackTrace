@@ -30,19 +30,29 @@ import {
 /**
  * Analysis engine interface
  * This is a placeholder - in production, this would call an LLM API
- * For now, it returns mock data for testing
+ *
+ * PRODUCTION INTEGRATION NOTES:
+ * - Replace with OpenAI, Anthropic Claude, or other LLM API
+ * - Ensure prompts enforce evidence-based analysis
+ * - Validate that responses include required fields (issueId, sourceEvidence, etc.)
+ * - Set temperature low (0.2-0.3) for consistent, factual output
+ * - Use structured output mode if available (e.g., OpenAI JSON mode)
  */
 async function callAnalysisEngine(prompt: string): Promise<string> {
-  // TODO: Replace with actual LLM API call (OpenAI, Anthropic, etc.)
-  // For now, return a mock response to enable testing
-  console.log("Analysis prompt length:", prompt.length);
+  // TODO: Replace with actual LLM API call
+  console.log("StackTrace Analysis Engine - Prompt length:", prompt.length);
   
-  // This is a placeholder that would be replaced with:
-  // const response = await openai.chat.completions.create({...});
+  // Example integration (uncomment and configure):
+  // const response = await openai.chat.completions.create({
+  //   model: "gpt-4-turbo-preview",
+  //   messages: [{ role: "user", content: prompt }],
+  //   temperature: 0.2,
+  //   response_format: { type: "json_object" }
+  // });
   // return response.choices[0].message.content;
   
   throw new Error(
-    "Analysis engine not configured. Set up LLM API integration in lib/analysis.ts"
+    "StackTrace Analysis Engine not configured. Set up LLM API integration in lib/analysis.ts"
   );
 }
 

@@ -1,4 +1,5 @@
 // Prompt builder functions for StackTrace 6-step analysis pipeline
+// Production-grade: Evidence-based, contextual, repo-specific analysis
 import { RepoContent } from "./github";
 import {
   ArchitectureInsight,
@@ -10,7 +11,7 @@ import {
 
 /**
  * Step 1: Architecture Analysis Prompt
- * Analyzes framework, patterns, and dependencies
+ * Analyzes framework, patterns, dependencies, and communication patterns
  */
 export function architecturePrompt(repoContent: RepoContent): string {
   const { owner, repo, packageManifest, sourceFiles, fileTree } = repoContent;
@@ -24,14 +25,19 @@ export function architecturePrompt(repoContent: RepoContent): string {
     : "";
 
   const sampleSourceCode = sourceFiles
-    .slice(0, 2)
-    .map((f) => `\n## ${f.path}\n\`\`\`\n${f.content.slice(0, 1000)}\n\`\`\``)
+    .slice(0, 3)
+    .map((f) => `\n## ${f.path}\n\`\`\`\n${f.content.slice(0, 1500)}\n\`\`\``)
     .join("\n");
 
-  return `You are analyzing the architecture of ${owner}/${repo}.
+  // Analyze directory structure for communication patterns
+  const directories = [...new Set(fileTree.map(f => f.path.split('/')[0]))];
+  const dirStructure = directories.join(", ");
+
+  return `You are analyzing the architecture of ${owner}/${repo} for StackTrace.
 
 # Repository Context
 File tree depth: ${fileTree.length} files
+Top-level directories: ${dirStructure}
 Key source files:
 ${sourceFilesList}
 ${manifestContent}
@@ -39,18 +45,22 @@ ${sampleSourceCode}
 
 # Task
 Analyze the repository architecture and provide a JSON response with:
-1. framework: The primary framework/runtime (e.g., "Next.js 14", "Django", "Express")
-2. patterns: Array of architectural patterns detected (e.g., ["MVC", "REST API", "Server Components"])
+1. framework: The primary framework/runtime with version (e.g., "Next.js 14.2", "Django 4.1")
+2. patterns: Array of architectural patterns detected (e.g., ["Server Components", "API Routes"])
 3. dependencies: Array of key dependencies from package manifest
-4. confidence: Float 0.0-1.0 indicating analysis confidence
+4. communicationPattern: **CRITICAL** - Identify the actual communication pattern used in THIS repo
+   - NOT generic framework defaults
+   - Cite specific directories/files (e.g., "Pub/Sub pattern via /events directory with EventEmitter")
+   - Examples: "REST API via /api routes", "GraphQL via /graphql endpoint", "WebSocket via /ws handlers"
+   - If non-standard for the framework, explain why (e.g., "Uses /events for pub/sub, which is non-standard for Next.js")
+5. confidence: Float 0.0-1.0 indicating analysis confidence
 
-# Guardrails
+# Evidence Requirements
 - ONLY cite real file paths visible in the file tree above
 - Never invent file paths or dependencies not in the manifest
-- If confidence < 0.6, explain why in a comment field
+- communicationPattern MUST reference actual directories/files from this repo
+- If you cannot find evidence of a communication pattern, set confidence < 0.4
 - Keep framework name specific with version if detectable
-- Limit patterns to 3-5 most significant ones
-- Limit dependencies to 5-8 most critical ones
 
 # Output Format
 Return ONLY valid JSON (no markdown fences):
@@ -58,13 +68,14 @@ Return ONLY valid JSON (no markdown fences):
   "framework": "string",
   "patterns": ["string"],
   "dependencies": ["string"],
+  "communicationPattern": "string",
   "confidence": 0.0
 }`;
 }
 
 /**
  * Step 2: Gotchas Analysis Prompt
- * Identifies potential pitfalls and non-obvious issues
+ * Identifies contextual, evidence-based pitfalls with unique IDs
  */
 export function gotchasPrompt(
   repoContent: RepoContent,
@@ -84,11 +95,18 @@ export function gotchasPrompt(
     ? `\n## Dockerfile\n\`\`\`\n${dockerfile.slice(0, 500)}\n\`\`\``
     : "";
 
-  return `You are identifying gotchas (non-obvious pitfalls) in ${owner}/${repo}.
+  // Include more source code for deeper analysis
+  const sourceCodeSamples = sourceFiles
+    .slice(0, 5)
+    .map((f) => `\n## ${f.path}\n\`\`\`\n${f.content.slice(0, 2000)}\n\`\`\``)
+    .join("\n");
+
+  return `You are identifying gotchas (non-obvious pitfalls) in ${owner}/${repo} for StackTrace.
 
 # Architecture Context
 Framework: ${architecture.framework}
 Patterns: ${architecture.patterns.join(", ")}
+Communication: ${architecture.communicationPattern}
 Dependencies: ${architecture.dependencies.join(", ")}
 
 # Repository Context
@@ -96,32 +114,53 @@ Workflows:
 ${workflowsList}
 ${envVars}
 ${dockerContent}
+${sourceCodeSamples}
 
 # Task
 Identify 3-5 gotchas (non-obvious issues that could trip up new developers).
 For each gotcha provide:
-1. title: Short descriptive title (max 8 words)
-2. description: What the issue is and why it matters (max 3 sentences)
-3. severity: "high" | "medium" | "low"
-4. filePath: Real file path where this gotcha exists
-5. confidence: Float 0.0-1.0
+1. issueId: Unique ID based on file and issue type (e.g., "AUTH-BYPASS-MIDDLEWARE-TS", "RACE-CONDITION-WEBHOOK-JS")
+   - Format: CATEGORY-TYPE-FILENAME
+   - Categories: AUTH, SECURITY, PERF, LOGIC, CONFIG, DEPLOY
+   - Must be unique and descriptive
+2. title: Short descriptive title (max 8 words)
+3. description: What the issue is and why it matters (max 3 sentences)
+4. severity: "high" | "medium" | "low"
+5. filePath: Real file path where this gotcha exists
+6. lineNumber: (optional) Specific line number if identifiable
+7. sourceEvidence: **REQUIRED** - Actual code snippet or configuration showing the issue
+   - Must be real code from the repository
+   - Include enough context to understand the problem
+   - If you cannot provide evidence, DO NOT report this gotcha
+8. customFix: **REQUIRED** - Tailored fix for THIS repo's coding style
+   - Must match the repo's conventions (indentation, quotes, etc.)
+   - Provide actual code or specific steps
+   - Reference the repo's existing patterns
+9. confidence: Float 0.4-1.0 (must be >= 0.4 if you have source evidence)
 
-# Guardrails
+# Critical Rules - PRODUCTION GRADE
 - MINIMUM 3 gotchas required (judges' rubric requirement)
-- ONLY cite real file paths from the repository
-- Focus on non-obvious issues (not basic setup steps)
-- Prioritize: missing env vars, deployment gotchas, dependency conflicts, framework-specific pitfalls
-- Never invent file paths - if unsure, use the closest real path
-- If confidence < 0.6, flag with ⚠️ in description
+- NO GENERIC ERRORS: Do not report "Missing README" or "No tests" - find INTERNAL LOGIC TRAPS
+- EVIDENCE REQUIRED: Every gotcha must cite actual code from the repository
+- CONTEXTUAL FIXES: Fixes must be tailored to this repo's style, not generic advice
+- Examples of good gotchas:
+  * "The webhook handler in /api/webhook.ts lacks signature verification (line 45), making it vulnerable to spoofing"
+  * "Race condition in /lib/cache.ts where concurrent requests can corrupt state (lines 78-92)"
+  * "Environment variable STRIPE_KEY is used but not documented in .env.example"
+- If you cannot find 3 evidence-based gotchas, set confidence < 0.4 for missing ones
 
 # Output Format
 Return ONLY valid JSON (no markdown fences):
 [
   {
+    "issueId": "string",
     "title": "string",
     "description": "string",
     "severity": "high",
     "filePath": "string",
+    "lineNumber": 0,
+    "sourceEvidence": "string",
+    "customFix": "string",
     "confidence": 0.0
   }
 ]`;
@@ -150,20 +189,27 @@ export function contributorGuidePrompt(
     ? `\nTest workflows found: ${testWorkflows.map((w) => w.path).join(", ")}`
     : "";
 
-  return `You are creating a contributor guide for ${owner}/${repo}.
+  const gotchasList = gotchas
+    .map((g) => `- ${g.title} (${g.severity}) - ${g.filePath}`)
+    .join("\n");
+
+  return `You are creating a contributor guide for ${owner}/${repo} for StackTrace.
 
 # Architecture Context
 Framework: ${architecture.framework}
+Communication: ${architecture.communicationPattern}
 Dependencies: ${architecture.dependencies.join(", ")}
 
-# Known Gotchas
-${gotchas.map((g) => `- ${g.title} (${g.severity})`).join("\n")}
+# Known Gotchas (address these in setup)
+${gotchasList}
 ${readmeSnippet}
 ${testingContext}
 
 # Task
 Generate a contributor guide with:
 1. setupSteps: Array of setup commands/steps (5-8 steps)
+   - Include fixes for known gotchas
+   - Reference actual files from the repo
 2. testingStrategy: Description of how to run tests (2-3 sentences)
 3. prProcess: Description of PR workflow (2-3 sentences)
 4. confidence: Float 0.0-1.0
@@ -215,10 +261,11 @@ export function deploymentPrompt(
     ? envExample.split("\n").filter((line) => line.includes("=")).map((line) => line.split("=")[0])
     : [];
 
-  return `You are creating a deployment runbook for ${owner}/${repo}.
+  return `You are creating a deployment runbook for ${owner}/${repo} for StackTrace.
 
 # Architecture Context
 Framework: ${architecture.framework}
+Communication: ${architecture.communicationPattern}
 Package Manager: ${packageManifest.type || "unknown"}
 ${deployContext}
 ${dockerContext}
@@ -253,7 +300,7 @@ Return ONLY valid JSON (no markdown fences):
 
 /**
  * Step 5: Coding Standards Prompt
- * Detects linter, formatter, and coding conventions
+ * Detects linter, formatter, and coding conventions with evidence
  */
 export function codingStandardsPrompt(
   repoContent: RepoContent,
@@ -277,11 +324,12 @@ export function codingStandardsPrompt(
     ? configFiles.join(", ")
     : "None detected";
 
-  const sampleCode = sourceFiles[0]
-    ? `\n## Sample Code (${sourceFiles[0].path})\n\`\`\`\n${sourceFiles[0].content.slice(0, 800)}\n\`\`\``
-    : "";
+  const sampleCode = sourceFiles
+    .slice(0, 3)
+    .map((f) => `\n## ${f.path}\n\`\`\`\n${f.content.slice(0, 1200)}\n\`\`\``)
+    .join("\n");
 
-  return `You are detecting coding standards for ${owner}/${repo}.
+  return `You are detecting coding standards for ${owner}/${repo} for StackTrace.
 
 # Architecture Context
 Framework: ${architecture.framework}
@@ -298,15 +346,21 @@ Detect coding standards with:
 1. linter: Name of linter (e.g., "ESLint", "Pylint") or null
 2. formatter: Name of formatter (e.g., "Prettier", "Black") or null
 3. conventions: Array of detected conventions (3-5 items)
-4. confidence: Float 0.0-1.0
+   - Must be specific to THIS repo (e.g., "2-space indentation", "single quotes")
+   - Infer from actual code samples above
+4. sourceEvidence: **REQUIRED** - Code snippet showing the conventions
+   - Must include examples of indentation, quotes, semicolons, etc.
+   - Cite specific files and line patterns
+5. confidence: Float 0.4-1.0 (must be >= 0.4 if you have source evidence)
 
-# Guardrails
+# Critical Rules
 - Check package.json scripts for linter/formatter
 - Check for config files (.eslintrc, .prettierrc, etc.)
 - Infer conventions from sample code (indentation, quotes, semicolons)
 - If no linter/formatter found, set to null (not empty string)
 - Conventions should be specific (e.g., "2-space indentation", "single quotes")
-- If confidence < 0.6, note what standards info is missing
+- sourceEvidence must cite actual code patterns from the samples above
+- If you cannot provide evidence, set confidence < 0.4
 
 # Output Format
 Return ONLY valid JSON (no markdown fences):
@@ -314,6 +368,7 @@ Return ONLY valid JSON (no markdown fences):
   "linter": "string or null",
   "formatter": "string or null",
   "conventions": ["string"],
+  "sourceEvidence": "string",
   "confidence": 0.0
 }`;
 }
@@ -332,16 +387,17 @@ export function assemblePlaybookPrompt(
 ): string {
   const { owner, repo } = repoContent;
 
-  return `You are assembling a team playbook for ${owner}/${repo}.
+  return `You are assembling a team playbook for ${owner}/${repo} for StackTrace.
 
 # All Analysis Cards
 ## Architecture
 Framework: ${architecture.framework}
+Communication: ${architecture.communicationPattern}
 Patterns: ${architecture.patterns.join(", ")}
 Confidence: ${architecture.confidence}
 
 ## Gotchas (${gotchas.length} found)
-${gotchas.map((g) => `- ${g.title} (${g.severity})`).join("\n")}
+${gotchas.map((g) => `- ${g.issueId}: ${g.title} (${g.severity})`).join("\n")}
 
 ## Contributor Guide
 Setup Steps: ${contributorGuide.setupSteps.length} steps

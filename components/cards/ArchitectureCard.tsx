@@ -29,6 +29,16 @@ export default function ArchitectureCard({ data }: ArchitectureCardProps) {
         <p className="text-lg font-medium text-text-primary">{data.framework}</p>
       </div>
 
+      {/* Communication Pattern */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-2">
+          Communication Pattern
+        </h3>
+        <p className="text-sm text-text-primary bg-accent/5 border border-accent/20 rounded p-3">
+          {data.communicationPattern}
+        </p>
+      </div>
+
       {/* Patterns */}
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-2">

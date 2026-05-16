@@ -1,13 +1,16 @@
-// Gotchas card component with severity indicators
+// Gotchas card component with severity indicators and evidence-based details
 
 import type { GotchaInsight } from "@/lib/types";
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
+import { useState } from "react";
 
 interface GotchasCardProps {
   data: GotchaInsight[];
 }
 
 export default function GotchasCard({ data }: GotchasCardProps) {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
   const getSeverityColor = (severity: "high" | "medium" | "low") => {
     switch (severity) {
       case "high":
@@ -17,6 +20,10 @@ export default function GotchasCard({ data }: GotchasCardProps) {
       case "low":
         return "bg-severity-low/10 border-severity-low/30 text-severity-low";
     }
+  };
+
+  const toggleExpand = (idx: number) => {
+    setExpandedIndex(expandedIndex === idx ? null : idx);
   };
 
   return (
@@ -36,8 +43,15 @@ export default function GotchasCard({ data }: GotchasCardProps) {
         {data.map((gotcha, idx) => (
           <div
             key={idx}
-            className="p-4 bg-background/50 border border-border rounded-lg"
+            className="p-4 bg-background/50 border border-border rounded-lg hover:border-accent/50 transition-colors"
           >
+            {/* Issue ID Badge */}
+            <div className="mb-2">
+              <code className="px-2 py-1 bg-accent/10 border border-accent/30 rounded text-accent text-xs font-mono font-semibold">
+                {gotcha.issueId}
+              </code>
+            </div>
+
             {/* Title and Severity */}
             <div className="flex items-start justify-between gap-3 mb-2">
               <h3 className="text-lg font-semibold text-text-primary flex-1">
@@ -60,10 +74,46 @@ export default function GotchasCard({ data }: GotchasCardProps) {
               {gotcha.description}
             </p>
 
-            {/* File Path */}
-            <code className="block px-2 py-1 bg-border/50 rounded text-text-primary text-xs font-mono">
-              {gotcha.filePath}
-            </code>
+            {/* File Path with Line Number */}
+            <div className="flex items-center gap-2 mb-3">
+              <code className="px-2 py-1 bg-border/50 rounded text-text-primary text-xs font-mono">
+                {gotcha.filePath}
+                {gotcha.lineNumber && `:${gotcha.lineNumber}`}
+              </code>
+            </div>
+
+            {/* Expand/Collapse Button */}
+            <button
+              onClick={() => toggleExpand(idx)}
+              className="text-accent text-sm font-medium hover:underline mb-2"
+            >
+              {expandedIndex === idx ? "▼ Hide Details" : "▶ Show Evidence & Fix"}
+            </button>
+
+            {/* Expanded Details */}
+            {expandedIndex === idx && (
+              <div className="mt-3 space-y-3 pt-3 border-t border-border">
+                {/* Source Evidence */}
+                <div>
+                  <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">
+                    Source Evidence
+                  </h4>
+                  <pre className="p-3 bg-background border border-border rounded text-xs font-mono text-text-primary overflow-x-auto">
+                    {gotcha.sourceEvidence}
+                  </pre>
+                </div>
+
+                {/* Custom Fix */}
+                <div>
+                  <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">
+                    Recommended Fix
+                  </h4>
+                  <div className="p-3 bg-accent/5 border border-accent/20 rounded text-sm text-text-primary">
+                    {gotcha.customFix}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

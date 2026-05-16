@@ -15,6 +15,10 @@ export const ArchitectureSchema = z.object({
     .array(z.string())
     .min(1, "At least one dependency required")
     .max(15, "Maximum 15 dependencies allowed"),
+  communicationPattern: z
+    .string()
+    .min(10, "Communication pattern must describe actual repo structure")
+    .max(200, "Communication pattern must be at most 200 characters"),
   confidence: z
     .number()
     .min(0, "Confidence must be >= 0")
@@ -27,6 +31,10 @@ export const ArchitectureSchema = z.object({
  * Validates individual gotcha insights
  */
 export const GotchaSchema = z.object({
+  issueId: z
+    .string()
+    .min(5, "Issue ID is required")
+    .regex(/^[A-Z]+-[A-Z]+-[A-Z0-9-]+$/i, "Issue ID must follow pattern: CATEGORY-TYPE-FILE"),
   title: z
     .string()
     .min(5, "Title must be at least 5 characters")
@@ -39,10 +47,23 @@ export const GotchaSchema = z.object({
     errorMap: () => ({ message: "Severity must be high, medium, or low" }),
   }),
   filePath: z.string().min(1, "File path is required"),
+  lineNumber: z.number().int().positive().optional(),
+  sourceEvidence: z
+    .string()
+    .min(10, "Source evidence is required - must cite actual code from the repository")
+    .max(1000, "Source evidence must be at most 1000 characters"),
+  customFix: z
+    .string()
+    .min(20, "Custom fix is required - must be tailored to this repo's coding style")
+    .max(800, "Custom fix must be at most 800 characters"),
   confidence: z
     .number()
     .min(0, "Confidence must be >= 0")
-    .max(1, "Confidence must be <= 1"),
+    .max(1, "Confidence must be <= 1")
+    .refine(
+      (val) => val >= 0.4,
+      "Confidence must be >= 0.4 when source evidence is provided"
+    ),
   low_confidence: z.boolean().optional(),
 });
 
@@ -114,10 +135,18 @@ export const CodingStandardsSchema = z.object({
     .array(z.string().min(1))
     .min(1, "At least 1 convention required")
     .max(10, "Maximum 10 conventions allowed"),
+  sourceEvidence: z
+    .string()
+    .min(10, "Source evidence is required - must cite actual code patterns")
+    .max(1000, "Source evidence must be at most 1000 characters"),
   confidence: z
     .number()
     .min(0, "Confidence must be >= 0")
-    .max(1, "Confidence must be <= 1"),
+    .max(1, "Confidence must be <= 1")
+    .refine(
+      (val) => val >= 0.4,
+      "Confidence must be >= 0.4 when source evidence is provided"
+    ),
   low_confidence: z.boolean().optional(),
 });
 

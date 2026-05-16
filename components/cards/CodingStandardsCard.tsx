@@ -50,7 +50,7 @@ export default function CodingStandardsCard({ data }: CodingStandardsCardProps) 
       </div>
 
       {/* Conventions */}
-      <div>
+      <div className="mb-4">
         <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">
           Detected Patterns
         </h3>
@@ -70,6 +70,16 @@ export default function CodingStandardsCard({ data }: CodingStandardsCardProps) 
             No specific conventions detected — review codebase manually
           </p>
         )}
+      </div>
+
+      {/* Source Evidence */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-2">
+          Code Evidence
+        </h3>
+        <pre className="p-3 bg-background border border-border rounded text-xs font-mono text-text-primary overflow-x-auto">
+          {data.sourceEvidence}
+        </pre>
       </div>
     </div>
   );
