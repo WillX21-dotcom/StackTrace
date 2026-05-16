@@ -1,4 +1,5 @@
 // Analysis pipeline for StackTrace - 6-step repo analysis
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { RepoContent } from "./github";
 import {
   ArchitectureInsight,
@@ -33,7 +34,6 @@ import {
 const BOB_API_KEY = process.env.BOB_API_KEY;
 const BOB_API_URL = process.env.BOB_API_URL || "https://api.bob.build/v1/chat/completions";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
 /**
  * Gemini Fallback Engine
@@ -48,48 +48,36 @@ async function callGeminiEngine(prompt: string): Promise<string> {
 
   console.log("🔄 StackTrace Fallback: Using Gemini 1.5 Flash engine");
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: `You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences.
+  // Initialize Gemini with v1beta API
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  
+  // Get model with responseMimeType in generationConfig
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+      temperature: 0.2,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 8192,
+      responseMimeType: "application/json"
+    }
+  });
+
+  const systemPrompt = `You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences.
 
 Return the output strictly as valid JSON matching the provided schema.
 
-${prompt}`
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192
-      }
-    }),
-  });
+${prompt}`;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Gemini API request failed (${response.status}): ${errorText}`
-    );
-  }
-
-  const data = await response.json();
+  const result = await model.generateContent(systemPrompt);
+  const response = result.response;
+  const text = response.text();
   
-  if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-    throw new Error("Invalid response format from Gemini API");
+  if (!text) {
+    throw new Error("Empty response from Gemini API");
   }
 
-  return data.candidates[0].content.parts[0].text;
+  return text;
 }
 
 /**
