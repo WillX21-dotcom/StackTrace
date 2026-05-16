@@ -33,7 +33,7 @@ import {
 const BOB_API_KEY = process.env.BOB_API_KEY;
 const BOB_API_URL = process.env.BOB_API_URL || "https://api.bob.build/v1/chat/completions";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
 /**
  * Gemini Fallback Engine
@@ -46,7 +46,7 @@ async function callGeminiEngine(prompt: string): Promise<string> {
     );
   }
 
-  console.log("🔄 Fallback: Using Gemini 1.5 Flash engine");
+  console.log("🔄 StackTrace Fallback: Using Gemini 1.5 Flash engine");
 
   const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
     method: "POST",
@@ -58,7 +58,11 @@ async function callGeminiEngine(prompt: string): Promise<string> {
         {
           parts: [
             {
-              text: `You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences.\n\n${prompt}`
+              text: `You are StackTrace, an expert code analyst. You provide evidence-based, repo-specific analysis. Always return valid JSON without markdown fences.
+
+Return the output strictly as valid JSON matching the provided schema.
+
+${prompt}`
             }
           ]
         }
@@ -67,8 +71,7 @@ async function callGeminiEngine(prompt: string): Promise<string> {
         temperature: 0.2,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 8192,
-        responseMimeType: "application/json"
+        maxOutputTokens: 8192
       }
     }),
   });
