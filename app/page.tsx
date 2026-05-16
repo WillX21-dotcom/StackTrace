@@ -43,13 +43,13 @@ export default function Home() {
         {/* Branding */}
         <div className="text-center space-y-4">
           <h1 className="text-5xl font-bold tracking-tight">
-            Repo<span className="text-accent">Mind</span>
+            Stack<span className="text-accent">Trace</span>
           </h1>
           <p className="text-text-secondary text-lg">
             AI-powered GitHub repository analysis and onboarding documentation
           </p>
           <p className="text-text-tertiary text-sm">
-            by <span className="text-accent font-semibold">StackTrace</span>
+            by <span className="text-accent font-semibold">StackTrace Team</span>
           </p>
         </div>
 

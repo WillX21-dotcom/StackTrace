@@ -9,13 +9,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RepoMind | StackTrace",
+  title: "StackTrace | GitHub Repository Analysis",
   description: "Analyze GitHub repositories and generate structured onboarding documentation with AI-powered insights.",
   keywords: ["github", "repository", "analysis", "onboarding", "documentation", "developer tools"],
   authors: [{ name: "StackTrace" }],
   creator: "StackTrace",
   openGraph: {
-    title: "RepoMind | StackTrace",
+    title: "StackTrace | GitHub Repository Analysis",
     description: "AI-powered GitHub repository analysis and onboarding documentation generator",
     type: "website",
   },

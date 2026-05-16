@@ -1,4 +1,4 @@
-// TypeScript type definitions for RepoMind
+// TypeScript type definitions for StackTrace
 
 export type RepoData = {
   owner: string;

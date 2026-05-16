@@ -2,10 +2,14 @@
 
 This file provides guidance to agents when working with code in this repository.
 
-## Project: RepoMind (IBM Bob Hackathon 2026)
+## Project: StackTrace (IBM Bob Hackathon 2026)
 **Team:** StackTrace (solo developer)
-**Product:** RepoMind — a tool that analyses GitHub repos and generates onboarding cards + team playbooks
+**Product:** StackTrace — a tool that analyses GitHub repos and generates onboarding cards + team playbooks
 **Tech Stack:** Next.js 14 App Router, TypeScript, Tailwind CSS, GitHub REST API, jspdf, marked, Zod
+
+## PERMANENT NAMING RULE
+**Product name is StackTrace, NOT RepoMind.**
+If the user accidentally says "RepoMind" in conversation or code, automatically correct it to "StackTrace" without needing a reminder. This is a permanent rule for all future interactions.
 
 ## Non-Obvious Project Rules
 

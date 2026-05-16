@@ -1,7 +1,7 @@
-# RepoMind — Complete Architecture Plan
+# StackTrace — Complete Architecture Plan
 
 ## Project Overview
-RepoMind is a Next.js 14 web application that analyzes public GitHub repositories and generates structured onboarding documentation. Users paste a GitHub URL, receive 5 analysis cards (architecture, gotchas, contributor guide, deployment runbook, coding standards), and can export a complete team playbook as PDF or Markdown.
+StackTrace is a Next.js 14 web application that analyzes public GitHub repositories and generates structured onboarding documentation. Users paste a GitHub URL, receive 5 analysis cards (architecture, gotchas, contributor guide, deployment runbook, coding standards), and can export a complete team playbook as PDF or Markdown.
 
 ---
 

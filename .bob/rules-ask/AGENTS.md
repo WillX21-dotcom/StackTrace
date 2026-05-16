@@ -1,6 +1,6 @@
 # Project Documentation Rules (Non-Obvious Only)
 
-## RepoMind Ask Mode Context
+## StackTrace Ask Mode Context
 
 ### Project Structure (Counterintuitive)
 - /app/api/ingest - GitHub fetching (not /api/github)

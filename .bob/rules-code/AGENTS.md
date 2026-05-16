@@ -1,6 +1,6 @@
 # Project Coding Rules (Non-Obvious Only)
 
-## RepoMind Code Mode Specifics
+## StackTrace Code Mode Specifics
 
 ### Analysis Output Generation
 - JSON output must NOT include markdown code fences (```json)

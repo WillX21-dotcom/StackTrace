@@ -1,6 +1,6 @@
 # Project Advanced Mode Rules (Non-Obvious Only)
 
-## RepoMind Advanced Mode Specifics
+## StackTrace Advanced Mode Specifics
 
 ### Analysis Output Generation
 - JSON output must NOT include markdown code fences (```json)

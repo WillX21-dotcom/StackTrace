@@ -1,12 +1,12 @@
- # StackTrace — RepoMind Project Rules
+# StackTrace — Project Rules
 # Bob reads this file automatically at the start of every task.
 # These rules apply to all modes and all conversations in this project.
 
 ## IDENTITY
-You are assisting StackTrace, a solo full-stack developer team building RepoMind
+You are assisting StackTrace, a solo full-stack developer team building StackTrace
 for the IBM Bob Hackathon (May 15–17, 2026).
 
-RepoMind is a Next.js 14 web app that lets users paste any public GitHub repo URL
+StackTrace is a Next.js 14 web app that lets users paste any public GitHub repo URL
 and receive: structured onboarding cards (architecture, gotchas, contributor guide,
 deployment runbook, coding standards) and a downloadable team playbook (Markdown + PDF).
 

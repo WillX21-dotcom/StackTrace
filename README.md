@@ -1,4 +1,4 @@
-# RepoMind
+# StackTrace
 
 AI-powered GitHub repository analysis and onboarding documentation generator.
 
@@ -33,8 +33,8 @@ AI-powered GitHub repository analysis and onboarding documentation generator.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/StackTrace/RepoMind.git
-cd RepoMind
+git clone https://github.com/StackTrace/StackTrace.git
+cd StackTrace
 ```
 
 2. Install dependencies:
@@ -117,6 +117,6 @@ MIT License - StackTrace Team
 ## Hackathon Submission
 
 **IBM Bob Hackathon 2026**  
-**Team:** StackTrace  
-**Product:** RepoMind  
+**Team:** StackTrace
+**Product:** StackTrace
 **Dates:** May 15-17, 2026

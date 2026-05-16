@@ -4,7 +4,7 @@ Update AGENTS.md with this additional project context:
 
 Team: StackTrace (solo developer, IBM Bob Hackathon 2026)
 
-Product: RepoMind — a tool that analyses GitHub repos and generates onboarding cards + team playbooks
+Product: StackTrace — a tool that analyses GitHub repos and generates onboarding cards + team playbooks
 
 Tech stack: Next.js 14 App Router, TypeScript, Tailwind CSS, GitHub REST API, jspdf, marked, Zod
 
@@ -28,17 +28,15 @@ Key directories (add these to AGENTS.md):
 
 \- .bob/rules          → stacktrace.md — Bob reads this as permanent project rules
 
-\- .bob/skills         → repomind/SKILL.md — repeatable analysis skill
+\- .bob/skills         → stacktrace/SKILL.md — repeatable analysis skill
 
 
 
 Branch strategy:
 
-\- develop: main working branch — push all commits here
+\- main: main working branch — push all commits here
 
-\- feat/\* : feature branches — merge to develop via PR
-
-\- main   : releases only — merge from develop via PR with Bob-generated description
+\- feat/\* : feature branches — merge to main via PR
 
 
 

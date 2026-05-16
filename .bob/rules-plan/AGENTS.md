@@ -1,6 +1,6 @@
 # Project Architecture Rules (Non-Obvious Only)
 
-## RepoMind Plan Mode Specifics
+## StackTrace Plan Mode Specifics
 
 ### Architecture Constraints (Hidden)
 - API routes must be stateless (no in-memory caching)
