@@ -31,104 +31,73 @@ export default function ResultsPage() {
 
   useEffect(() => {
     if (owner && repo) {
-      // Simulate progressive analysis with messages
-      const messages = [
-        "Fetching repository contents...",
-        "Analyzing architecture patterns...",
-        "Detecting potential gotchas...",
-        "Extracting contributor guidelines...",
-        "Mapping deployment pipeline...",
-        "Identifying coding standards...",
-        "Generating playbook summary...",
-      ];
+      const repoUrl = `https://github.com/${owner}/${repo}`;
+      
+      // Call the actual /api/analyse endpoint
+      const analyzeRepo = async () => {
+        try {
+          const response = await fetch("/api/analyse", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ repoUrl }),
+          });
 
-      let messageIndex = 0;
-      const messageInterval = setInterval(() => {
-        if (messageIndex < messages.length) {
-          setProgressMessages((prev) => [...prev, messages[messageIndex]]);
-          messageIndex++;
-        } else {
-          clearInterval(messageInterval);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Analysis failed");
+          }
+
+          // Handle Server-Sent Events stream
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+
+          if (!reader) {
+            throw new Error("No response stream available");
+          }
+
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              if (!line.trim()) continue;
+
+              const eventMatch = line.match(/^event: (.+)$/m);
+              const dataMatch = line.match(/^data: (.+)$/m);
+
+              if (eventMatch && dataMatch) {
+                const event = eventMatch[1];
+                const data = JSON.parse(dataMatch[1]);
+
+                if (event === "progress") {
+                  setProgressMessages((prev) => [...prev, data.step]);
+                } else if (event === "complete") {
+                  setAnalysisResult(data.data);
+                  setIsAnalyzing(false);
+                } else if (event === "error") {
+                  setError(data.error);
+                  setIsAnalyzing(false);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Analysis error:", err);
+          setError(err instanceof Error ? err.message : "An error occurred during analysis");
+          setIsAnalyzing(false);
         }
-      }, 500);
+      };
 
-      // Simulate analysis completion with mock data
-      setTimeout(() => {
-        setAnalysisResult({
-          architecture: {
-            framework: "Next.js 14 (App Router)",
-            patterns: ["Server Components", "API Routes", "Client-side State"],
-            dependencies: [
-              "next@14.0.0",
-              "react@18.2.0",
-              "typescript@5.0.0",
-              "tailwindcss@3.3.0",
-              "zod@3.22.0",
-            ],
-            confidence: 0.92,
-          },
-          gotchas: [
-            {
-              title: "Missing Error Boundaries",
-              description: "No error boundaries detected in the component tree. Unhandled errors will crash the entire app.",
-              severity: "high",
-              filePath: "app/layout.tsx",
-              confidence: 0.85,
-            },
-            {
-              title: "Unvalidated API Responses",
-              description: "External API responses are not validated with Zod schemas before use.",
-              severity: "medium",
-              filePath: "lib/github.ts",
-              confidence: 0.78,
-            },
-            {
-              title: "Hardcoded API Endpoints",
-              description: "API endpoints are hardcoded instead of using environment variables.",
-              severity: "low",
-              filePath: "lib/api.ts",
-              confidence: 0.65,
-            },
-          ],
-          contributorGuide: {
-            setupSteps: [
-              "Clone the repository and install dependencies with npm install",
-              "Copy .env.example to .env.local and add your GitHub token",
-              "Run npm run dev to start the development server on port 3000",
-              "Open http://localhost:3000 in your browser",
-            ],
-            testingStrategy: "No automated tests detected. Consider adding Jest and React Testing Library for component tests.",
-            prProcess: "Create feature branches from develop, commit with conventional commits (feat/fix/chore), and open PRs for review before merging.",
-            confidence: 0.71,
-          },
-          deploymentRunbook: {
-            buildCommand: "npm run build",
-            envVars: ["GITHUB_TOKEN", "NEXT_PUBLIC_API_URL"],
-            deploymentSteps: ["Install", "Build", "Test", "Deploy"],
-            confidence: 0.88,
-          },
-          codingStandards: {
-            linter: "eslint",
-            formatter: "prettier",
-            conventions: [
-              "TypeScript strict mode enabled",
-              "Functional components with hooks",
-              "Tailwind CSS for styling",
-              "Conventional commit messages",
-            ],
-            confidence: 0.82,
-          },
-          playbook: {
-            overallConfidence: 0.81,
-            readyForOnboarding: true,
-            missingInfo: ["Test coverage", "CI/CD pipeline"],
-            strengths: ["Clear architecture", "Type safety", "Modern stack"],
-          },
-        });
-        setIsAnalyzing(false);
-      }, 4000);
-
-      return () => clearInterval(messageInterval);
+      analyzeRepo();
     }
   }, [owner, repo]);
 
@@ -150,11 +119,12 @@ export default function ResultsPage() {
         <ErrorCard
           title="Analysis Failed"
           message={error}
-          suggestion="Check that the repository is public and accessible."
+          suggestion="Check that the repository is public and accessible, or try again later."
           onRetry={() => {
             setError(null);
             setIsAnalyzing(true);
             setProgressMessages([]);
+            window.location.reload();
           }}
         />
       </main>
@@ -220,7 +190,7 @@ export default function ResultsPage() {
                   </p>
                 </div>
                 
-                <ExportButtons
+                <ExportButtons 
                   repoName={`${owner}-${repo}`}
                   analysisData={analysisResult}
                 />
@@ -241,7 +211,7 @@ export default function ResultsPage() {
 
             {/* Architecture Map View */}
             {activeTab === "architecture" && (
-              <ArchitectureMap
+              <ArchitectureMap 
                 data={analysisResult.architecture}
                 repoName={`${owner}/${repo}`}
               />

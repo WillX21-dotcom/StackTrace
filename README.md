@@ -2,38 +2,51 @@
 
 AI-powered GitHub repository analysis and onboarding documentation generator.
 
-**Team:** StackTrace (IBM Bob Hackathon 2026)
+**Built for IBM Bob Hackathon 2026** by StackTrace Team
 
 ## Features
 
-- 🏗️ **Architecture Analysis** - Detect frameworks, patterns, and dependencies
-- ⚠️ **Gotchas Detection** - Identify pitfalls and common issues (minimum 3 per analysis)
+- 🏗️ **Architecture Analysis** - Detect frameworks, patterns, dependencies, and communication patterns
+- ⚠️ **Gotcha Detection** - Identify non-obvious pitfalls with evidence-based analysis
 - 👥 **Contributor Guide** - Generate setup steps, testing strategy, and PR process
 - 🚀 **Deployment Runbook** - Build commands, environment variables, and deployment steps
-- 📋 **Coding Standards** - Detect linters, formatters, and conventions
-- 📄 **Export Playbooks** - Download as PDF or Markdown
+- 📝 **Coding Standards** - Detect linters, formatters, and conventions with code evidence
+- 📊 **Team Playbook** - Export comprehensive onboarding documentation as PDF or Markdown
+- 🗺️ **Architecture Map** - Interactive visual diagram of codebase structure
+
+## Production-Grade Analysis Engine
+
+StackTrace uses an evidence-based analysis pipeline that ensures **100% unique, repo-specific insights**:
+
+- ✅ **Unique Issue IDs** - Format: `CATEGORY-TYPE-FILE` (e.g., `AUTH-BYPASS-MIDDLEWARE-TS`)
+- ✅ **Mandatory Source Evidence** - Every gotcha cites actual code from the repository
+- ✅ **Custom Fixes** - Tailored to the repo's coding style and conventions
+- ✅ **Communication Pattern Detection** - Identifies actual patterns (Pub/Sub, REST, GraphQL, etc.)
+- ✅ **Line Number Tracking** - Precise issue location (e.g., `file.ts:45`)
+- ✅ **Confidence Scoring** - Minimum 0.4 threshold when evidence is provided
 
 ## Tech Stack
 
 - **Framework:** Next.js 14 (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS (dark developer theme)
+- **Styling:** Tailwind CSS
 - **Validation:** Zod
-- **GitHub API:** Octokit
-- **Export:** jspdf, marked
+- **PDF Export:** jspdf
+- **Markdown Parsing:** marked
+- **API:** GitHub REST API
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- GitHub personal access token (optional but recommended for higher rate limits)
+- GitHub Personal Access Token (for API access)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/StackTrace/StackTrace.git
+git clone https://github.com/WillX21-dotcom/StackTrace.git
 cd StackTrace
 ```
 
@@ -42,81 +55,119 @@ cd StackTrace
 npm install
 ```
 
-3. Create `.env.local` from template:
+3. Set up environment variables:
 ```bash
 cp .env.example .env.local
 ```
 
-4. Add your GitHub token to `.env.local` (optional):
+Edit `.env.local` and add your GitHub token:
 ```
-GITHUB_TOKEN=ghp_your_token_here
+GITHUB_TOKEN=your_github_personal_access_token
 ```
+
+4. **Configure LLM Integration** (Required for analysis):
+
+The analysis engine requires an LLM API (OpenAI, Anthropic Claude, etc.). 
+
+Edit `lib/analysis.ts` and replace the `callAnalysisEngine` function with your LLM integration:
+
+```typescript
+async function callAnalysisEngine(prompt: string): Promise<string> {
+  // Example: OpenAI Integration
+  const response = await openai.chat.completions.create({
+    model: "gpt-4-turbo-preview",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.2,
+    response_format: { type: "json_object" }
+  });
+  return response.choices[0].message.content;
+}
+```
+
+**Important:** Set temperature to 0.2-0.3 for consistent, factual output.
 
 5. Run the development server:
 ```bash
 npm run dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000)
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Usage
+
+1. Enter a public GitHub repository URL (e.g., `https://github.com/vercel/next.js`)
+2. Click "Analyze Repository"
+3. Wait for the analysis to complete (progress updates shown in real-time)
+4. View the analysis cards, architecture map, or export the team playbook
 
 ## Project Structure
 
 ```
 StackTrace/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── ingest/        # GitHub content fetching
-│   │   ├── analyse/       # 6-step analysis pipeline
-│   │   └── export/        # PDF and Markdown generation
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx           # Home page with repo URL input
 │   ├── results/           # Analysis results page
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   └── globals.css        # Tailwind styles
+│   └── api/               # API routes
+│       ├── ingest/        # GitHub repo content fetching
+│       └── analyse/       # 6-step analysis pipeline
 ├── components/            # React components
 │   ├── cards/            # Analysis card components
 │   └── ui/               # Reusable UI components
-├── lib/                  # Utilities and business logic
+├── lib/                   # Core utilities
 │   ├── github.ts         # GitHub API client
 │   ├── analysis.ts       # Analysis pipeline
-│   ├── export.ts         # Export utilities
-│   ├── prompts.ts        # Analysis prompts
-│   ├── validation.ts     # Zod schemas
-│   └── types.ts          # TypeScript types
-└── public/               # Static assets
+│   ├── prompts.ts        # LLM prompt templates
+│   ├── schemas.ts        # Zod validation schemas
+│   ├── types.ts          # TypeScript type definitions
+│   └── export.ts         # PDF and Markdown export
+└── .bob/                  # Bob AI configuration
+    ├── rules/            # Project-specific rules
+    └── skills/           # Reusable analysis skills
 ```
 
-## Development Workflow
+## Analysis Pipeline
 
-### Git Branches
+StackTrace uses a 6-step analysis pipeline:
 
-- `main` - Production releases only
-- `develop` - Main working branch (push all commits here)
-- `feat/*` - Feature branches (merge to develop via PR)
+1. **Architecture Analysis** - Framework, patterns, dependencies, communication patterns
+2. **Gotcha Detection** - Evidence-based pitfalls with unique IDs and custom fixes
+3. **Contributor Guide** - Setup steps, testing strategy, PR process
+4. **Deployment Runbook** - Build commands, env vars, deployment steps
+5. **Coding Standards** - Linters, formatters, conventions with code evidence
+6. **Playbook Assembly** - Synthesize all insights into a cohesive summary
 
-### Commit Convention
+## Validation Rules
 
-Use Conventional Commits format:
-```
-feat(cards): add architecture card with confidence scoring
-fix(api): handle GitHub rate limit errors
-chore(deps): update Next.js to 14.2.3
-```
+- **Gotchas:** Minimum 3 required, each with source evidence (10-1000 chars) and custom fix (20-800 chars)
+- **Architecture:** Communication pattern must describe actual repo structure (10-200 chars)
+- **Coding Standards:** Source evidence required (10-1000 chars)
+- **Confidence:** Minimum 0.4 when evidence is provided
+- **Issue IDs:** Must follow pattern `CATEGORY-TYPE-FILE` (e.g., `AUTH-BYPASS-MIDDLEWARE-TS`)
 
-### Before Merging
+## Git Workflow
 
-Run `/review` in Bob chat to check code quality.
+- **develop:** Main working branch - push all commits here
+- **feat/*:** Feature branches - merge to develop via PR
+- **main:** Releases only - merge from develop via PR
 
-## Environment Variables
+Commit message format: Conventional Commits (`feat|fix|chore|docs|refactor|test|style`)
 
-See `.env.example` for all available configuration options.
+## Contributing
+
+1. Create a feature branch from `develop`
+2. Make your changes
+3. Run `/review` in Bob chat before merging
+4. Open a PR to `develop`
+5. After approval, merge to `develop`
 
 ## License
 
-MIT License - StackTrace Team
+MIT License - see LICENSE file for details
 
-## Hackathon Submission
+## Acknowledgments
 
-**IBM Bob Hackathon 2026**  
-**Team:** StackTrace
-**Product:** StackTrace
-**Dates:** May 15-17, 2026
+Built with [IBM Bob](https://www.ibm.com/bob) for the IBM Bob Hackathon 2026.
+
+---
+
+**StackTrace** - Making repository onboarding effortless with AI-powered analysis.
